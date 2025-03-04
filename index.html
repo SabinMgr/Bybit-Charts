@@ -3,19 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bybit 4H Candlestick Chart</title>
+    <title>Bybit 4H Candlestick Charts</title>
     <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #121212;
+            color: white;
+            margin: 0;
+            padding: 20px;
+        }
+        h2 {
+            margin-bottom: 10px;
+        }
+        .charts-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        .chart-box {
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 10px;
+            width: 45%;
+            min-width: 300px;
+            height: 400px;
+        }
+    </style>
 </head>
 <body>
-    <h2>Bybit 4H Candlestick Chart</h2>
-    <select id="symbol">
-        <option value="BTCUSDT">BTC/USDT</option>
-        <option value="ETHUSDT">ETH/USDT</option>
-        <option value="XRPUSDT">XRP/USDT</option>
-        <option value="SOLUSDT">SOL/USDT</option>
-    </select>
-    <div id="chart"></div>
-    <script src="script.js"></script>
+    <h2>Bybit 4H Candlestick Charts</h2>
+    <div class="charts-container" id="charts-container"></div>
+    <script>
+        const symbols = ["BTCUSDT", "ETHUSDT", "XRPUSDT", "SOLUSDT"];
+        const container = document.getElementById("charts-container");
+
+        async function fetchData(symbol) {
+            const url = `https://api.bybit.com/v2/public/kline/list?symbol=${symbol}&interval=240&limit=50`;
+            const response = await fetch(url);
+            const data = await response.json();
+            return data.result.map(candle => ({
+                time: candle.open_time,
+                open: parseFloat(candle.open),
+                high: parseFloat(candle.high),
+                low: parseFloat(candle.low),
+                close: parseFloat(candle.close)
+            }));
+        }
+
+        async function createChart(symbol) {
+            const chartBox = document.createElement("div");
+            chartBox.className = "chart-box";
+            container.appendChild(chartBox);
+            
+            const chart = LightweightCharts.createChart(chartBox, { width: chartBox.clientWidth, height: 350 });
+            const candleSeries = chart.addCandlestickSeries();
+            
+            const candles = await fetchData(symbol);
+            candleSeries.setData(candles);
+        }
+
+        symbols.forEach(symbol => createChart(symbol));
+    </script>
 </body>
 </html>
